@@ -1,0 +1,9 @@
+path: C:/Users/Fujitsu/StudyWork/Elita_3/smart-parking-vision/data
+
+train: train/images
+val: valid/images
+test: test/images
+
+names:
+  0: empty
+  1: occupied

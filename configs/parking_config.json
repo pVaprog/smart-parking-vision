@@ -1,0 +1,27 @@
+{
+    "parking_id": "demo_parking_1",
+    "description": "Demo parking configuration for Smart Parking Vision",
+    "spots": [
+        {
+            "id": 1,
+            "x1": 120,
+            "y1": 120,
+            "x2": 180,
+            "y2": 190
+        },
+        {
+            "id": 2,
+            "x1": 190,
+            "y1": 120,
+            "x2": 250,
+            "y2": 190
+        },
+        {
+            "id": 3,
+            "x1": 260,
+            "y1": 120,
+            "x2": 320,
+            "y2": 190
+        }
+    ]
+}
