@@ -1,3 +1,9 @@
+from src.model.yolo_detector import (
+    YOLOParkingDetector,
+    draw_yolo_detections,
+    calculate_yolo_statistics
+)
+
 from pathlib import Path
 import uuid
 
@@ -27,6 +33,12 @@ OUTPUT_DIR = BASE_DIR / "outputs"
 
 OUTPUT_DIR.mkdir(exist_ok=True)
 
+MODEL_PATH = BASE_DIR / "models" / "parking_yolov8n_best.pt"
+
+yolo_detector = YOLOParkingDetector(
+    model_path=str(MODEL_PATH),
+    confidence_threshold=0.25
+)
 
 @app.get("/")
 def root():
@@ -227,4 +239,46 @@ async def analyze_video(file: UploadFile = File(...)):
             content={
                 "error": str(e)
             }
+        )
+        
+@app.post("/analyze-parking-yolo")
+async def analyze_parking_yolo(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+
+        np_array = np.frombuffer(contents, np.uint8)
+        image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+
+        if image is None:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Не удалось прочитать изображение"}
+            )
+
+        detections = yolo_detector.predict(image)
+
+        statistics = calculate_yolo_statistics(detections)
+
+        visualized_image = draw_yolo_detections(
+            image,
+            detections
+        )
+
+        output_filename = f"parking_yolo_result_{uuid.uuid4().hex}.jpg"
+        output_path = OUTPUT_DIR / output_filename
+
+        cv2.imwrite(str(output_path), visualized_image)
+
+        return {
+            "mode": "yolo",
+            "model": str(MODEL_PATH.name),
+            "statistics": statistics,
+            "detections_count": len(detections),
+            "result_image": f"/result-image/{output_filename}"
+        }
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": str(e)}
         )
