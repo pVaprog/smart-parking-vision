@@ -37,18 +37,18 @@
 ## Датасет
 
 Для обучения использовался датасет парковочных мест в COCO-формате:
-
+```
 data/
 ├── train/
 ├── valid/
 └── test/
-
+```
 Каждая папка содержит изображения и файл:
 
 _annotations.coco.json
 
 Перед обучением датасет был преобразован из COCO-формата в YOLO-формат:
-
+```
 data_yolo/
 ├── train/
 │   ├── images/
@@ -59,22 +59,17 @@ data_yolo/
 └── test/
     ├── images/
     └── labels/
-
+```
 ## Notebook обучения модели
 
 Обучение модели выполнялось в Google Colab с использованием GPU Tesla T4.
 
 Colab Notebook:
 
-notebooks/Smart_Parking_YOLO_Training.ipynb
-
-Если notebook загружен в GitHub, ссылка будет выглядеть так:
-
-https://github.com/USERNAME/smart-parking-vision/blob/main/notebooks/Smart_Parking_YOLO_Training.ipynb
-
-Замените USERNAME на ваш GitHub-логин.
+notebooks/Education_of_model.ipynb
 
 ## Структура проекта
+```
 smart-parking-vision/
 │
 ├── app/
@@ -109,7 +104,7 @@ smart-parking-vision/
 │
 ├── requirements.txt
 └── README.md
-
+```
 ## Технологии
 
 Проект реализован на Python.
@@ -154,10 +149,10 @@ models/
 parking_yolov8n_best.pt
 
 Итоговая структура должна быть:
-
+```
 models/
 └── parking_yolov8n_best.pt
-
+```
 ## Запуск проекта
 
 Проект запускается двумя отдельными процессами:
@@ -214,7 +209,7 @@ http://localhost:8501
 сохранение best.pt.
 
 Пример запуска обучения:
-
+```
 from ultralytics import YOLO
 
 model = YOLO("yolov8n.pt")
@@ -226,17 +221,18 @@ model.train(
     batch=16,
     device=0
 )
+```
 ## Результаты
 
 После обучения YOLO формирует:
-
+```
 runs/
 ├── confusion_matrix.png
 ├── results.png
 ├── val_batch0_pred.jpg
 └── weights/
     └── best.pt
-
+```
 Эти файлы позволяют оценить качество модели и показать результаты на защите.
 
 ## Особенности MVP
