@@ -123,7 +123,7 @@ def analyze_image(uploaded_file):
     }
 
     response = requests.post(
-        f"{API_URL}/analyze-parking",
+        f"{API_URL}/analyze-parking-yolo",
         files=files,
         timeout=120
     )

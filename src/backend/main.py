@@ -37,7 +37,7 @@ MODEL_PATH = BASE_DIR / "models" / "parking_yolov8n_best.pt"
 
 yolo_detector = YOLOParkingDetector(
     model_path=str(MODEL_PATH),
-    confidence_threshold=0.25
+    confidence_threshold=0.35
 )
 
 @app.get("/")
@@ -255,7 +255,7 @@ async def analyze_parking_yolo(file: UploadFile = File(...)):
                 content={"error": "Не удалось прочитать изображение"}
             )
 
-        detections = yolo_detector.predict(image)
+        detections = yolo_detector.predict_tiled(image)
 
         statistics = calculate_yolo_statistics(detections)
 

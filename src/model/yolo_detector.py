@@ -3,9 +3,12 @@ from pathlib import Path
 import cv2
 from ultralytics import YOLO
 
+from sahi import AutoDetectionModel
+from sahi.predict import get_sliced_prediction
+
 
 class YOLOParkingDetector:
-    def __init__(self, model_path: str, confidence_threshold: float = 0.25):
+    def __init__(self, model_path: str, confidence_threshold: float = 0.35):
         self.model_path = Path(model_path)
         self.confidence_threshold = confidence_threshold
 
@@ -14,10 +17,19 @@ class YOLOParkingDetector:
 
         self.model = YOLO(str(self.model_path))
 
+        self.sahi_model = AutoDetectionModel.from_pretrained(
+            model_type="ultralytics",
+            model_path=str(self.model_path),
+            confidence_threshold=self.confidence_threshold,
+            device="cpu"
+        )
+
     def predict(self, image):
         results = self.model(
             image,
             conf=self.confidence_threshold,
+            iou=0.35,
+            imgsz=1920,
             verbose=False
         )
 
@@ -28,9 +40,7 @@ class YOLOParkingDetector:
         for box in result.boxes:
             class_id = int(box.cls[0])
             confidence = float(box.conf[0])
-
             x1, y1, x2, y2 = box.xyxy[0].tolist()
-
             class_name = result.names[class_id]
 
             detections.append(
@@ -47,7 +57,43 @@ class YOLOParkingDetector:
 
         return detections
 
+    def predict_tiled(self, image):
+        result = get_sliced_prediction(
+            image,
+            self.sahi_model,
+            slice_height=135,
+            slice_width=135,
+            overlap_height_ratio=0.35,
+            overlap_width_ratio=0.35,
+            postprocess_type="NMS",
+            postprocess_match_metric="IOU",
+            postprocess_match_threshold=0.35,
+            verbose=0
+        )
 
+        detections = []
+
+        for obj in result.object_prediction_list:
+            bbox = obj.bbox
+
+            class_id = int(obj.category.id)
+            class_name = obj.category.name
+            confidence = float(obj.score.value)
+
+            detections.append(
+                {
+                    "class_id": class_id,
+                    "class_name": class_name,
+                    "confidence": confidence,
+                    "x1": int(bbox.minx),
+                    "y1": int(bbox.miny),
+                    "x2": int(bbox.maxx),
+                    "y2": int(bbox.maxy)
+                }
+            )
+
+        return detections
+    
 def draw_yolo_detections(image, detections):
     result = image.copy()
 
@@ -58,32 +104,31 @@ def draw_yolo_detections(image, detections):
         y2 = det["y2"]
 
         class_name = det["class_name"]
-        confidence = det["confidence"]
 
         if class_name == "space-empty":
             color = (0, 255, 0)
-            label = f"EMPTY {confidence:.2f}"
+            label = "FREE"
         elif class_name == "space-occupied":
             color = (0, 0, 255)
-            label = f"OCC {confidence:.2f}"
+            label = "OCC"
         else:
             color = (0, 255, 255)
-            label = f"{class_name} {confidence:.2f}"
+            label = class_name
 
         cv2.rectangle(
             result,
             (x1, y1),
             (x2, y2),
             color,
-            2
+            1
         )
 
         cv2.putText(
             result,
             label,
-            (x1, max(y1 - 5, 15)),
+            (x1, max(y1 - 3, 10)),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.45,
+            0.28,
             color,
             1,
             cv2.LINE_AA
